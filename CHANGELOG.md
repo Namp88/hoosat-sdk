@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+### [0.2.4](https://github.com/Namp88/hoosat-sdk/compare/v0.2.3...v0.2.4) (2025-11-29)
+
+### ✨ Features
+
+- add getBlockByTransactionId method ([ac0b7fd](https://github.com/Namp88/hoosat-sdk/commit/ac0b7fd1e62f16f0c0e900433f9af8012b85d3d0))
+
 ### [0.2.3](https://github.com/Namp88/hoosat-sdk/compare/v0.2.2...v0.2.3) (2025-10-25)
 
 ### [0.2.2](https://github.com/Namp88/hoosat-sdk/compare/v0.2.1...v0.2.2) (2025-10-19)
