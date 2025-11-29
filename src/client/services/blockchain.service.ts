@@ -4,8 +4,10 @@ import { BaseResult } from '@models/base.result';
 import { buildResult } from '@helpers/build-result.helper';
 import { GetSelectedTipHashResponse } from '@client/models/response/get-selected-tip-hash.response';
 import { GetBlockResponse } from '@client/models/response/get-block.response';
+import { GetBlockByTransactionIdResponse } from '@client/models/response/get-block-by-transaction-id.response';
 import { GetSelectedTipHash } from '@client/models/result/get-selected-tip-hash';
 import { GetBlock } from '@client/models/result/get-block';
+import { GetBlockByTransactionId } from '@client/models/result/get-block-by-transaction-id';
 import { GetBlocks } from '@client/models/result/get-blocks';
 import { GetBlocksResponse } from '@client/models/response/get-blocks.response';
 import { GetBlockCount } from '@client/models/result/get-block-count';
@@ -45,6 +47,36 @@ export class BlockchainService extends BaseService {
       return buildResult(getBlockResponse.error, result);
     } catch (error) {
       return buildResult({ message: `Failed to get block: ${error}` }, {} as GetBlock);
+    }
+  }
+
+  /**
+   * Get block information by transaction ID.
+   * Returns the block that contains the specified transaction.
+   *
+   * @param transactionId - The transaction ID to search for
+   * @param includeTransactions - Whether to include full transaction data in the response (default: true)
+   * @returns Block containing the transaction, or error if not found
+   */
+  async getBlockByTransactionId(transactionId: string, includeTransactions = true): Promise<BaseResult<GetBlockByTransactionId>> {
+    try {
+      if (!HoosatUtils.isValidTransactionId(transactionId)) {
+        throw new Error('Invalid transaction ID');
+      }
+
+      const { getBlockByTransactionIdResponse } = await this._request<GetBlockByTransactionIdResponse>(
+        RequestType.GetBlockByTransactionIdRequest,
+        {
+          transactionId,
+          includeTransactions,
+        }
+      );
+
+      const result: GetBlockByTransactionId = getBlockByTransactionIdResponse.block;
+
+      return buildResult(getBlockByTransactionIdResponse.error, result);
+    } catch (error) {
+      return buildResult({ message: `Failed to get block by transaction ID: ${error}` }, {} as GetBlockByTransactionId);
     }
   }
 

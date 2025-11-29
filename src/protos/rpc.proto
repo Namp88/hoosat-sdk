@@ -1,16 +1,16 @@
 // RPC-related types. Request messages, response messages, and dependant types.
 //
-// Clients are expected to build RequestMessages and wrap them in htndMessage. (see messages.proto)
+// Clients are expected to build RequestMessages and wrap them in HoosatdMessage. (see messages.proto)
 //
-// Having received a RequestMessage, (wrapped in a htndMessage) the RPC server will respond with a
-// ResponseMessage (likewise wrapped in a htndMessage) respective to the original RequestMessage.
+// Having received a RequestMessage, (wrapped in a HoosatdMessage) the RPC server will respond with a
+// ResponseMessage (likewise wrapped in a HoosatdMessage) respective to the original RequestMessage.
 //
 // **IMPORTANT:** This API is a work in progress and is subject to break between versions.
 //
 syntax = "proto3";
 package protowire;
 
-option go_package = "github.com/kaspanet/htnd/protowire";
+option go_package = "github.com/Hoosat-Oy/HTND/protowire";
 
 // RPCError represents a generic non-internal error.
 //
@@ -133,6 +133,7 @@ message GetCurrentNetworkResponseMessage{
 message SubmitBlockRequestMessage{
   RpcBlock block = 2;
   bool allowNonDAABlocks = 3;
+  string powHash = 4;
 }
 
 message SubmitBlockResponseMessage{
@@ -150,7 +151,7 @@ message SubmitBlockResponseMessage{
 //
 // See: SubmitBlockRequestMessage
 message GetBlockTemplateRequestMessage{
-  // Which htnpa address should the coinbase block reward transaction pay into
+  // Which hoosat address should the coinbase block reward transaction pay into
   string payAddress = 1;
   string extraData = 2;
 }
@@ -228,8 +229,8 @@ message GetMempoolEntryResponseMessage{
 // GetMempoolEntriesRequestMessage requests information about all the transactions
 // currently in the mempool.
 message GetMempoolEntriesRequestMessage{
-  bool includeOrphanPool = 1;
-  bool filterTransactionPool = 2;
+        bool includeOrphanPool = 1;
+        bool filterTransactionPool = 2;
 }
 
 message GetMempoolEntriesResponseMessage{
@@ -339,6 +340,20 @@ message GetBlockRequestMessage{
 
 message GetBlockResponseMessage{
   RpcBlock block = 3;
+  RPCError error = 1000;
+}
+
+// GetBlockByTransactionIDRequestMessage requests information about a block containing a specific transaction
+message GetBlockByTransactionIDRequestMessage{
+  // The transaction ID to search for
+  string transactionId = 1;
+
+  // Whether to include transaction data in the response
+  bool includeTransactions = 2;
+}
+
+message GetBlockByTransactionIDResponseMessage{
+  RpcBlock block = 1;
   RPCError error = 1000;
 }
 
@@ -716,8 +731,8 @@ message GetCoinSupplyRequestMessage{
 }
 
 message GetCoinSupplyResponseMessage{
-  uint64 maxSompi = 1; // note: this is a hard coded maxSupply, actual maxSupply is expected to deviate by upto -5%, but cannot be measured exactly.
-  uint64 circulatingSompi = 2;
+        uint64 maxSompi = 1; // note: this is a hard coded maxSupply, actual maxSupply is expected to deviate by upto -5%, but cannot be measured exactly.
+        uint64 circulatingSompi = 2;
 
-  RPCError error = 1000;
+        RPCError error = 1000;
 }

@@ -20,6 +20,7 @@ import { GetInfo } from '@client/models/result/get-info';
 import { GetBlockDagInfo } from '@client/models/result/get-block-dag-info';
 import { GetBlockCount } from '@client/models/result/get-block-count';
 import { GetBlock } from '@client/models/result/get-block';
+import { GetBlockByTransactionId } from '@client/models/result/get-block-by-transaction-id';
 import { GetBlocks } from '@client/models/result/get-blocks';
 import { GetSelectedTipHash } from '@client/models/result/get-selected-tip-hash';
 import { GetVirtualSelectedParentBlueScore } from '@client/models/result/get-virtual-selected-parent-blue-score';
@@ -520,6 +521,30 @@ export class HoosatClient {
    */
   async getBlocks(lowHash: string, includeTransactions = false): Promise<BaseResult<GetBlocks>> {
     return this._blockchainService!.getBlocks(lowHash, includeTransactions);
+  }
+
+  /**
+   * Gets a block by transaction ID
+   *
+   * Returns the block that contains the specified transaction.
+   * Useful for finding which block a transaction was included in.
+   *
+   * @param transactionId - Transaction ID to search for
+   * @param includeTransactions - Whether to include full transaction data (default: true)
+   * @returns Block containing the transaction
+   *
+   * @example
+   * ```typescript
+   * const result = await client.getBlockByTransactionId('a1b2c3d4e5f6...', true);
+   * if (result.ok) {
+   *   console.log('Block hash:', result.result.verboseData.hash);
+   *   console.log('Block timestamp:', result.result.header.timestamp);
+   *   console.log('Transactions:', result.result.transactions?.length);
+   * }
+   * ```
+   */
+  async getBlockByTransactionId(transactionId: string, includeTransactions = true): Promise<BaseResult<GetBlockByTransactionId>> {
+    return this._blockchainService!.getBlockByTransactionId(transactionId, includeTransactions);
   }
 
   /**

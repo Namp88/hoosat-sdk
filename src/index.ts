@@ -5,6 +5,7 @@ export type { GetInfo } from '@client/models/result/get-info';
 export type { GetBlockDagInfo } from '@client/models/result/get-block-dag-info';
 export type { GetBlockCount } from '@client/models/result/get-block-count';
 export type { GetBlock } from '@client/models/result/get-block';
+export type { GetBlockByTransactionId } from '@client/models/result/get-block-by-transaction-id';
 export type { GetBlocks } from '@client/models/result/get-blocks';
 export type { GetSelectedTipHash } from '@client/models/result/get-selected-tip-hash';
 export type { GetVirtualSelectedParentBlueScore } from '@client/models/result/get-virtual-selected-parent-blue-score';

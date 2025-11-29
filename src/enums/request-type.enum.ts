@@ -7,6 +7,7 @@ export enum RequestType {
   // Blocks
   GetSelectedTipHashRequest = 'getSelectedTipHashRequest',
   GetBlockRequest = 'getBlockRequest',
+  GetBlockByTransactionIdRequest = 'getBlockByTransactionIdRequest',
   GetBlocksRequest = 'getBlocksRequest',
   GetBlockCountRequest = 'getBlockCountRequest',
   GetBlockDagInfoRequest = 'getBlockDagInfoRequest',
