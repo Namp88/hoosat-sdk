@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+### [0.2.5](https://github.com/Namp88/hoosat-sdk/compare/v0.2.4...v0.2.5) (2025-12-10)
+
+### 📝 Documentation
+
+- add payload methods and getBlockByTransactionId to README ([56aab7b](https://github.com/Namp88/hoosat-sdk/commit/56aab7b72d1da56b73beff1a71aa2994c7de97ed))
+
 ### [0.2.4](https://github.com/Namp88/hoosat-sdk/compare/v0.2.3...v0.2.4) (2025-11-29)
 
 ### ✨ Features
