@@ -36,6 +36,7 @@
 - 📊 **Network Analytics** - Block data, mempool analysis, hashrate estimation
 - 💰 **Balance & UTXO Management** - Query balances, manage UTXOs efficiently
 - 🎨 **QR Code Generation** - Payment URIs and address QR codes
+- 📦 **Payload Support** - Encode/decode transaction payloads for voting, mining data, and custom applications
 
 ### Advanced Features
 
@@ -407,6 +408,8 @@ Comprehensive utility functions for validation, conversion, and formatting.
 - Key validation (private keys, public keys)
 - Formatting utilities (truncation, amounts)
 - Hashrate conversion and formatting
+- Payload encoding/decoding (hex ↔ UTF-8, JSON support)
+- UTXO maturity filtering (coinbase handling)
 
 ---
 
@@ -485,6 +488,7 @@ const client = new HoosatClient({
 **Blockchain Queries**
 - `getSelectedTipHash()` - Get current tip block hash
 - `getBlock(blockHash, includeTransactions?)` - Get block data
+- `getBlockByTransactionId(transactionId, includeTransactions?)` - Find block containing specific transaction
 - `getBlocks(lowHash, includeTransactions?)` - Get multiple blocks
 - `getBlockCount()` - Get blockchain height
 - `getBlockDagInfo()` - Get DAG structure information
@@ -1099,6 +1103,61 @@ HoosatUtils.parseHashrate(formatted: string): number | null
 ```typescript
 HoosatUtils.hexToBuffer(hex: string): Buffer | null
 HoosatUtils.bufferToHex(buffer: Buffer): string
+```
+
+**Payload Decoding and Encoding**
+```typescript
+// Decode hex payload to UTF-8 string
+HoosatUtils.decodePayload(hexPayload: string): string
+
+// Decode and parse payload as JSON
+HoosatUtils.parsePayloadAsJson<T>(hexPayload: string): T
+
+// Encode UTF-8 string to hex payload
+HoosatUtils.encodePayload(payload: string): string
+
+// Encode JSON object to hex payload
+HoosatUtils.encodePayloadAsJson(data: any): string
+
+// Check if payload is valid JSON
+HoosatUtils.isJsonPayload(hexPayload: string): boolean
+
+// Safe decoding with metadata (fallback for invalid UTF-8)
+HoosatUtils.decodePayloadSafe(hexPayload: string): {
+  decoded: string;
+  isValidUtf8: boolean;
+  isJson: boolean;
+  raw: string;
+}
+```
+
+**Examples:**
+```typescript
+// Decode mining payload
+const miningHex = '52721f0600000000...';
+const decoded = HoosatUtils.decodePayload(miningHex);
+// Returns: "Rr...1.6.2/'hoo_gpu/1.2.12' via htn-stratum-bridge..."
+
+// Decode and parse vote transaction payload
+const voteHex = '7b2274797065223a22766f7465227d';
+const voteData = HoosatUtils.parsePayloadAsJson(voteHex);
+// Returns: { type: 'vote' }
+
+// Encode data for payload transaction
+const data = { type: 'poll_create', title: 'Test Poll' };
+const hexPayload = HoosatUtils.encodePayloadAsJson(data);
+// Returns: '7b2274797065223a22706f6c6c5f637265617465...'
+
+// Safe decode with validation
+const safe = HoosatUtils.decodePayloadSafe(someHex);
+if (safe.isJson) {
+  const data = JSON.parse(safe.decoded);
+  console.log('JSON payload:', data);
+} else if (safe.isValidUtf8) {
+  console.log('Text payload:', safe.decoded);
+} else {
+  console.log('Binary payload:', safe.raw);
+}
 ```
 
 **UTXO Utilities**

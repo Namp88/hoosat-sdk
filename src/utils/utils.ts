@@ -571,4 +571,131 @@ export class HoosatUtils {
 
     return { mature, immature };
   }
+
+  // ==================== PAYLOAD DECODING ====================
+
+  /**
+   * Decodes hex-encoded payload to UTF-8 string
+   * @param hexPayload - Hex-encoded payload string (with or without 0x prefix)
+   * @returns Decoded UTF-8 string
+   * @throws Error if payload is not valid hex
+   * @example
+   * HoosatUtils.decodePayload('48656c6c6f') // 'Hello'
+   */
+  static decodePayload(hexPayload: string): string {
+    if (!hexPayload || hexPayload.length === 0) {
+      return '';
+    }
+
+    // Remove 0x prefix if present
+    const cleanHex = hexPayload.toLowerCase().replace(/^0x/, '');
+
+    // Validate hex format
+    if (!/^[0-9a-f]*$/.test(cleanHex)) {
+      throw new Error(`Invalid hex payload format: ${hexPayload}`);
+    }
+
+    // Convert hex to buffer and decode as UTF-8
+    const buffer = Buffer.from(cleanHex, 'hex');
+    return buffer.toString('utf-8');
+  }
+
+  /**
+   * Decodes hex-encoded payload and parses it as JSON
+   * @param hexPayload - Hex-encoded JSON payload string
+   * @returns Parsed JSON object
+   * @throws Error if payload is not valid hex or JSON
+   * @example
+   * const data = HoosatUtils.parsePayloadAsJson('7b2274797065223a22766f7465227d');
+   * // Returns: { type: 'vote' }
+   */
+  static parsePayloadAsJson<T = any>(hexPayload: string): T {
+    const decoded = this.decodePayload(hexPayload);
+
+    try {
+      return JSON.parse(decoded) as T;
+    } catch (error) {
+      throw new Error(`Payload is not valid JSON: ${decoded}`);
+    }
+  }
+
+  /**
+   * Encodes UTF-8 string to hex payload
+   * @param payload - UTF-8 string to encode
+   * @returns Hex-encoded payload string
+   * @example
+   * HoosatUtils.encodePayload('Hello') // '48656c6c6f'
+   */
+  static encodePayload(payload: string): string {
+    if (!payload || payload.length === 0) {
+      return '';
+    }
+
+    return Buffer.from(payload, 'utf-8').toString('hex');
+  }
+
+  /**
+   * Encodes JSON object to hex payload
+   * @param data - Object to encode as JSON payload
+   * @returns Hex-encoded JSON payload string
+   * @example
+   * HoosatUtils.encodePayloadAsJson({ type: 'vote' }) // '7b2274797065223a22766f7465227d'
+   */
+  static encodePayloadAsJson(data: any): string {
+    const json = JSON.stringify(data);
+    return this.encodePayload(json);
+  }
+
+  /**
+   * Checks if payload is valid JSON after decoding
+   * @param hexPayload - Hex-encoded payload string
+   * @returns True if payload is valid JSON, false otherwise
+   * @example
+   * HoosatUtils.isJsonPayload('7b7d') // true (empty object)
+   * HoosatUtils.isJsonPayload('48656c6c6f') // false ('Hello' is not JSON)
+   */
+  static isJsonPayload(hexPayload: string): boolean {
+    try {
+      this.parsePayloadAsJson(hexPayload);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Decodes payload with fallback to raw hex if not valid UTF-8
+   * @param hexPayload - Hex-encoded payload string
+   * @returns Object with decoded string and metadata
+   * @example
+   * HoosatUtils.decodePayloadSafe('48656c6c6f')
+   * // Returns: { decoded: 'Hello', isValidUtf8: true, isJson: false }
+   */
+  static decodePayloadSafe(hexPayload: string): {
+    decoded: string;
+    isValidUtf8: boolean;
+    isJson: boolean;
+    raw: string;
+  } {
+    const raw = hexPayload.toLowerCase().replace(/^0x/, '');
+
+    try {
+      const decoded = this.decodePayload(hexPayload);
+      const isJson = this.isJsonPayload(hexPayload);
+
+      return {
+        decoded,
+        isValidUtf8: true,
+        isJson,
+        raw,
+      };
+    } catch {
+      return {
+        decoded: raw,
+        isValidUtf8: false,
+        isJson: false,
+        raw,
+      };
+    }
+  }
 }
