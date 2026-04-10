@@ -25,7 +25,8 @@
       "@models/*": ["src/models/*"],
       "@qr/*": ["src/qr/*"],
       "@transaction/*": ["src/transaction/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@wallet/*": ["src/wallet/*"]
     }
   },
   "include": ["src/**/*"],

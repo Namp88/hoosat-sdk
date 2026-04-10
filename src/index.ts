@@ -52,6 +52,17 @@ export type { TxBuilderOptions } from '@transaction/tx-builder.types';
 
 export { HoosatUtils } from '@utils/utils';
 
+export { HoosatWallet } from './wallet/wallet';
+export type {
+  WalletConfig,
+  WalletUtxo,
+  SendTransactionOptions,
+  CreateAddressOptions,
+  WalletHdConfig,
+  WalletAddressRole,
+  WalletAddressInfo,
+} from './wallet/wallet';
+
 export type { Transaction, TransactionInput, TransactionOutput, UtxoEntry, UtxoForSigning } from '@models/transaction.types';
 export type { BaseResult } from '@models/base.result';
 
