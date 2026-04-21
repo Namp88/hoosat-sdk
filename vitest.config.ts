@@ -25,6 +25,7 @@ export default defineConfig({
       '@streaming': path.resolve(__dirname, './src/streaming'),
       '@transaction': path.resolve(__dirname, './src/transaction'),
       '@utils': path.resolve(__dirname, './src/utils'),
+      '@wallet': path.resolve(__dirname, './src/wallet'),
     },
   },
 });

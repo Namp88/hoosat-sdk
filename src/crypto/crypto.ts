@@ -111,6 +111,18 @@ export class HoosatCrypto {
   }
 
   /**
+   * Derives Schnorr (x-only) public key from private key.
+   *
+   * Hoosat Schnorr addresses (version 0x00) use a 32-byte x-only public key.
+   * This is the x-coordinate of the secp256k1 public point.
+   */
+  static getSchnorrPublicKey(privateKey: Buffer): Buffer {
+    const compressed = this.getPublicKey(privateKey);
+    // Compressed public key format: 0x02/0x03 + 32-byte X coordinate
+    return compressed.subarray(1, 33);
+  }
+
+  /**
    * Imports wallet from hex-encoded private key
    * @param privateKeyHex - 64-character hex string (32 bytes)
    * @param network - Network type: 'mainnet' or 'testnet' (default: 'mainnet')
@@ -272,6 +284,45 @@ export class HoosatCrypto {
     return fee.toString();
   }
 
+  /**
+   * Calculates a transaction fee estimate using a fee-rate-per-byte, with a safe
+   * lower bound based on Hoosat's MASS-based minimum fee.
+   *
+   * This method exists for backward compatibility with earlier SDK versions and
+   * for simple fee estimation when you only know input/output counts.
+   *
+   * @param inputCount - Number of inputs
+   * @param outputCount - Number of outputs
+   * @param feePerByte - Fee rate per byte (default: 1)
+   * @param payloadSize - Optional payload size in bytes (default: 0)
+   * @returns Fee in sompi as string
+   */
+  static calculateFee(inputCount: number, outputCount: number, feePerByte: number = 1, payloadSize: number = 0): string {
+    if (!Number.isFinite(inputCount) || inputCount < 0) {
+      throw new Error('inputCount must be a non-negative number');
+    }
+    if (!Number.isFinite(outputCount) || outputCount < 0) {
+      throw new Error('outputCount must be a non-negative number');
+    }
+    if (!Number.isFinite(feePerByte) || feePerByte <= 0) {
+      throw new Error('feePerByte must be a positive number');
+    }
+    if (!Number.isFinite(payloadSize) || payloadSize < 0) {
+      throw new Error('payloadSize must be a non-negative number');
+    }
+
+    const estimatedSize =
+      HOOSAT_MASS.BaseTxOverhead +
+      inputCount * HOOSAT_MASS.EstimatedInputSize +
+      outputCount * HOOSAT_MASS.EstimatedOutputSize +
+      payloadSize;
+
+    const sizeBasedFee = BigInt(Math.ceil(estimatedSize * feePerByte));
+    const minFee = BigInt(this.calculateMinFee(inputCount, outputCount, payloadSize));
+
+    return (sizeBasedFee > minFee ? sizeBasedFee : minFee).toString();
+  }
+
   // ==================== TRANSACTION SIGNING ====================
 
   /**
@@ -398,6 +449,69 @@ export class HoosatCrypto {
       publicKey,
       sigHashType: HOOSAT_PARAMS.SIGHASH_ALL,
     };
+  }
+
+  /**
+   * Signs single transaction input with Schnorr.
+   *
+   * Note: Unlike ECDSA inputs, Schnorr scripts (OP_CHECKSIG) use the Schnorr
+   * signature hash directly.
+   */
+  static signTransactionInputSchnorr(
+    transaction: Transaction,
+    inputIndex: number,
+    privateKey: Buffer,
+    utxo: UtxoForSigning,
+    reusedValues: SighashReusedValues = {}
+  ): TransactionSignature {
+    const sigHash = this.getSignatureHashSchnorr(transaction, inputIndex, utxo, reusedValues);
+
+    const schnorrSign = (secp256k1 as any).schnorrSign as undefined | ((msg32: Buffer, seckey: Buffer) => Uint8Array);
+    if (!schnorrSign) {
+      throw new Error('Schnorr signing is not supported by the installed secp256k1 library');
+    }
+
+    const signature = schnorrSign(sigHash, privateKey);
+    const publicKey = this.getSchnorrPublicKey(privateKey);
+
+    return {
+      signature: Buffer.from(signature),
+      publicKey,
+      sigHashType: HOOSAT_PARAMS.SIGHASH_ALL,
+    };
+  }
+
+  /**
+   * Signs an input using the script opcode to choose Schnorr vs ECDSA.
+   *
+   * - OP_CHECKSIG (0xac) => Schnorr
+   * - OP_CHECKSIGECDSA (0xab) => ECDSA
+   */
+  static signTransactionInputAuto(
+    transaction: Transaction,
+    inputIndex: number,
+    privateKey: Buffer,
+    utxo: UtxoForSigning,
+    reusedValues: SighashReusedValues = {}
+  ): TransactionSignature {
+    const scriptHex = utxo?.utxoEntry?.scriptPublicKey?.script;
+    if (typeof scriptHex === 'string' && scriptHex.length >= 2) {
+      try {
+        const script = Buffer.from(scriptHex, 'hex');
+        const lastOpcode = script[script.length - 1];
+        if (lastOpcode === 0xac) {
+          return this.signTransactionInputSchnorr(transaction, inputIndex, privateKey, utxo, reusedValues);
+        }
+        if (lastOpcode === 0xab) {
+          return this.signTransactionInput(transaction, inputIndex, privateKey, utxo, reusedValues);
+        }
+      } catch {
+        // Fall through to default below
+      }
+    }
+
+    // Default to legacy ECDSA signing
+    return this.signTransactionInput(transaction, inputIndex, privateKey, utxo, reusedValues);
   }
 
   /**
